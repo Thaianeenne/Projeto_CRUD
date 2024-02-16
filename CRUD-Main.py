@@ -8,15 +8,15 @@ from tkinter import messagebox
 # imagem
 from PIL import Image, ImageTk
 
-# FUNÇÃO PARA CRIAR O ARQUIVO --------------------------------------------------------------------------------------------------------------------------------------------
+# FUNÇÃO PARA CRIAR O ARQUIVO ---------------------------------------------------------------------------------------
 def criar_arquivo():
     with open("dados.txt", "w") as arquivo:
         arquivo.write("")
 
-    with open('numero.csv', 'w', encoding='cp1252', newline='\r\n') as arquivo:
+    with open('dados.csv', 'w', encoding='cp1252', newline='\r\n') as arquivo:
         writer = csv.writer(arquivo)
 
-# FUNÇÃO PARA LER O ARQUIVO ----------------------------------------------------------------------------------------------------------------------------------------------
+# FUNÇÃO PARA LER O ARQUIVO -----------------------------------------------------------------------------------------
 def ler_arquivo():
     try:
         with open('numero.csv', 'r', encoding='cp1252', newline='\r\n') as arquivo_csv:
@@ -32,19 +32,20 @@ def ler_arquivo():
         return []
     
 
-# FUNÇÃO COLETAR DADOS ---------------------------------------------------------------------------------------------------------------------------------------------------
+# FUNÇÃO COLETAR DADOS -------------------------------------------------------------------------------------------------
 def inserir_registro():
     nome = entrada_nome.get()
     idade = entrada_idade.get()
-    sexo = entrada_sexo.get()
+    selected_sexo = sexo.get()
     matricula = entrada_matricula.get()
     nota1 = entrada_nota1.get()
     nota2 = entrada_nota2.get()
     nota3 = entrada_nota3.get()
 
-    if not nome or not idade or not sexo or not matricula or not nota1 or not nota2 or not nota3:
+    if not nome or not idade or not selected_sexo or not matricula or not nota1 or not nota2 or not nota3:
         messagebox.showerror("Erro", "Preencha todos os campos antes de inserir um registro.")
         return
+
     try:
         nota1 = float(nota1.replace(',', '.'))
         nota2 = float(nota2.replace(',', '.'))
@@ -52,33 +53,46 @@ def inserir_registro():
     except ValueError:
         messagebox.showerror("Erro", "As notas devem ser números válidos.")
         return
-    
+
     media = (nota1 + nota2 + nota3) / 3
     media = round(media, 1)
 
-    dados = [nome, idade, sexo, matricula, nota1, nota2, nota3, media]
+    dados = [nome, idade, selected_sexo, matricula, nota1, nota2, nota3, media]
 
     registros = ler_arquivo()
 
-    registros.append(dados)
+    matricula_existe = False
 
-    registros_ordenados = sorted(registros, key=lambda x: x[0].lower())
+    for i, registro in enumerate(registros):
+        if registro and len(registro) >= 4 and registro[3] == matricula:
+            registros[i] = dados  # Atualiza o registro existente
+            matricula_existe = True
+            break
+
+    if not matricula_existe:
+        registros.append(dados)  # Adiciona um novo registro
+
+    # Garante que cada lista tenha pelo menos um elemento antes de ordenar
+    registros_ordenados = sorted(registros, key=lambda x: x[0].lower() if x else "")
 
     with open("numero.csv", "w", newline='') as arquivo:
         writer = csv.writer(arquivo)
         writer.writerows(registros_ordenados)
-    
+
     mostrar_tabela()
     exibir()
     apagar()
 
 
 
-# Função para limpar os campos -------------------------------------------------------------------------------------------------------------------------------------------
+# Definindo Botão de Selecionar Sexo
+
+
+
+# Função para limpar os campos -------------------------------------------------------------------------------------
 def apagar():
     entrada_nome.delete(0, tk.END)
     entrada_idade.delete(0, tk.END)
-    entrada_sexo.delete(0, tk.END)
     entrada_matricula.delete(0, tk.END)
     entrada_nota1.delete(0, tk.END)
     entrada_nota2.delete(0, tk.END)
@@ -87,7 +101,7 @@ def apagar():
 
 
 
-# FUNÇÃO PARA EXIBIR DADOS -----------------------------------------------------------------------------------------------------------------------------------------------
+# FUNÇÃO PARA EXIBIR DADOS ---------------------------------------------------------------------------------------
 def exibir():
     var_nome_exibir = entrada_nome.get()
     var_matricula_exibir = entrada_matricula.get()
@@ -118,12 +132,12 @@ def exibir():
     apagar()
 
 
-# FUNÇÃO PARA ATUALIZAR REGISTRO------------------------------------------------------------------------------------------------------------------------------------------
+# FUNÇÃO PARA ATUALIZAR REGISTRO------------------------------------------------------------------------------
 
 def atualizar_registro():
     nome = entrada_nome.get()
     idade = entrada_idade.get()
-    sexo = entrada_sexo.get()
+    selected_sexo = sexo.get()  # Get the selected gender from the option menu
     matricula = entrada_matricula.get()
     nota1 = entrada_nota1.get()
     nota2 = entrada_nota2.get()
@@ -158,7 +172,7 @@ def atualizar_registro():
                     if matricula_atual == matricula or nome_atual == nome:
                         linha[0] = nome
                         linha[1] = str(idade)
-                        linha[2] = sexo
+                        linha[2] = selected_sexo = sexo.get()
                         linha[3] = matricula
                         linha[4] = str(nota1)
                         linha[5] = str(nota2)
@@ -182,7 +196,7 @@ def atualizar_registro():
 
 
 
-# FUNÇÃO PARA EXCLUIR DADOS ----------------------------------------------------------------------------------------------------------------------------------------------
+# FUNÇÃO PARA EXCLUIR DADOS ------------------------------------------------------------------------------------
 def excluir():
     var_matricula_excluir = entrada_matricula.get()
     var_nome_excluir = entrada_nome.get()
@@ -210,27 +224,33 @@ def excluir():
     mostrar_tabela()
     apagar()
 
-# CRIAR INTERFACE (Janela)------------------------------------------------------------------------------------------------------------------------------------------------
+# CRIAR INTERFACE (Janela)----------------------------------------------------------------------------------------
 janela = tk.Tk()
 janela.title ("Cadastro de Alunos")
 janela.geometry('900x600')
 janela.resizable(width=FALSE, height= FALSE)
 
-# Divisão de frame -------------------------------------------------------------------------------------------------------------------------------------------------------
-frameCima = Frame(janela, width=1043, height=50, bg='gray', relief=FLAT)
+# Divisão de frame ------------------------------------------------------------------------------------------------
+
+frameAll = Frame(janela, width=5000, height=5000, bg= "black", relief=FLAT )
+frameAll.place(x=0, y=1)
+
+frameCima = Frame(janela, width=1043, height=50, bg='#3C3C3C', relief=FLAT)
 frameCima.place(x=0, y=1)
 
-frameMeioD = Frame(janela, width=200, height=290, bg='gray', pady=20, relief=FLAT)
+frameMeioD = Frame(janela, width=200, height=290, bg='#3C3C3C', pady=20, relief=FLAT)
 frameMeioD.place(x=698, y=52)
 
-frameMeioE = Frame(janela, width=695, height=290, bg='gray', pady=20, relief=FLAT)
+frameMeioE = Frame(janela, width=695, height=290, bg='#3C3C3C', pady=20, relief=FLAT)
 frameMeioE.place(x=0, y=52)
 
-frameBaixo = Frame(janela, width=1043, height=450, bg='gray', relief=FLAT)
+frameBaixo = Frame(janela, width=1043, height=450, bg='#3C3C3C', relief=FLAT)
 frameBaixo.place(x=0, y=343)
 
 
-# Trabalhando no frame Cima ----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+# Trabalhando no frame Cima ----------------------------------------------------------------------------------------
 
 # Abrindo imagem 
 app_img = Image.open('imagem1.png')
@@ -247,55 +267,86 @@ app_logo = Label(frameCima,
                  anchor=NW, 
                  #OR CENTER
                  font=('verdana 20 bold'), 
-                 bg='gray', 
-                 foreground="black",
+                 bg='black', 
+                 foreground="#C3C3C3",
                  justify=CENTER 
                  )
-app_logo.place(x=0, y=0)
+app_logo.place(x=-1, y=0)
 
-#Frame Meio---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#-------------------------------------------------------------
+
+
+def sexo(selecao):
+    print(f"Sexo: {selecao}")
+
+    # Adicionar a lógica para salvar no arquivo CSV
+    with open('numero.csv', 'a', newline='') as csvfile:
+        fieldnames = ['Sexo']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        # Verificar se o arquivo já existe e escrever os cabeçalhos, se necessário
+        if csvfile.tell() == 0:
+            writer.writeheader()
+
+        # Escrever a seleção no arquivo
+        writer.writerow({'Sexo': selecao})
+
+
+
+
+#Frame Meio----------------------------------------------------------------------------------------------------------
 # CAIXAS DE ENTRADA
 
-l_nome = Label(frameMeioE, text='Nome', height=1, anchor=NW, font=('ivy 10 bold'), bg='gray', fg='black')
+l_nome = Label(frameMeioE, text='Nome', height=1, anchor=NW, font=('ivy 10 bold'), bg='#3C3C3C', fg='#C3C3C3')
 l_nome.place(x=100, y=20)
 entrada_nome = Entry(frameMeioE, width=30, justify='left', relief='solid')
 entrada_nome.place(x=180, y=21)
 
-l_idade = Label(frameMeioE, text='Idade', height=1, anchor=NW, font=('ivy 10 bold'), bg='gray', fg='black')
+l_idade = Label(frameMeioE, text='Idade', height=1, anchor=NW, font=('ivy 10 bold'), bg='#3C3C3C', fg='#C3C3C3')
 l_idade.place(x=100, y=50)
 entrada_idade = Entry(frameMeioE, width=30, justify='left', relief='solid')
 entrada_idade.place(x=180, y=51)
 
-l_sexo = Label(frameMeioE, text='Sexo', height=1, anchor=NW, font=('ivy 10 bold'), bg='gray', fg='black')
+l_sexo = Label(frameMeioE, text='Sexo', height=1, anchor=NW, font=('ivy 10 bold'), bg='#3C3C3C', fg='#C3C3C3')
 l_sexo.place(x=100, y=80)
-entrada_sexo = Entry(frameMeioE, width=30, justify='left', relief='solid')
-entrada_sexo.place(x=180, y=81)
+sexo = ctk.CTkOptionMenu(janela, 
+                  values=["Feminino", 'Masculino', 'Prefiro não dizer'],
+                  command= sexo,
+                  height= 23,
+                  width= 184,
+                  bg_color= '#3C3C3C',
+                  fg_color= "white",
+                  text_color= "black"
+                  )
+sexo.place(x=180, y=151)
+sexo.set('Selecione uma opção')
 
-l_matricula = Label(frameMeioE, text='matricula', height=1, anchor=NW, font=('ivy 10 bold'), bg='gray', fg='black')
+l_matricula = Label(frameMeioE, text='matricula', height=1, anchor=NW, font=('ivy 10 bold'), bg='#3C3C3C', fg='#C3C3C3')
 l_matricula.place(x=100, y=110)
 entrada_matricula = Entry(frameMeioE, width=30, justify='left', relief='solid')
 entrada_matricula.place(x=180, y=111)
 
-l_nota1 = Label(frameMeioE, text='Nota', height=1, anchor=NW, font=('ivy 10 bold'), bg='gray', fg='black')
+l_nota1 = Label(frameMeioE, text='Nota', height=1, anchor=NW, font=('ivy 10 bold'), bg='#3C3C3C', fg='#C3C3C3')
 l_nota1.place(x=100, y=140)
 entrada_nota1 = Entry(frameMeioE, width=30, justify='left', relief='solid')
 entrada_nota1.place(x=180, y=141)
 
 
-l_nota2 = Label(frameMeioE, text='Nota', height=1, anchor=NW, font=('ivy 10 bold'), bg='gray', fg='black')
+l_nota2 = Label(frameMeioE, text='Nota', height=1, anchor=NW, font=('ivy 10 bold'), bg='#3C3C3C', fg='#C3C3C3')
 l_nota2.place(x=100, y=170)
 entrada_nota2 = Entry(frameMeioE, width=30, justify='left', relief='solid')
 entrada_nota2.place(x=180, y=171)
 
 
-l_nota3 = Label(frameMeioE, text='Nota', height=1, anchor=NW, font=('ivy 10 bold'), bg='gray', fg='black')
+l_nota3 = Label(frameMeioE, text='Nota', height=1, anchor=NW, font=('ivy 10 bold'), bg='#3C3C3C', fg='#C3C3C3')
 l_nota3.place(x=100, y=200)
 entrada_nota3 = Entry(frameMeioE, width=30, justify='left', relief='solid')
 entrada_nota3.place(x=180, y=201)
 
 
 
-# BOTÕES -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+# BOTÕES --------------------------------------------------------------------------------------------------------------
 
 b_inserir = Button(frameMeioE, command=inserir_registro , width=30, text= "    Inserir".upper(), compound=CENTER,anchor=NW, overrelief=RIDGE, relief='solid', font=('ivy 8 bold'), bg='black', fg='gray')
 b_inserir.place(x=430, y=20)
@@ -311,7 +362,7 @@ b_excluir.place(x=430, y=110)
 
 
 
-# TABELA------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# TABELA----------------------------------------------------------------------------------------------------------------
 global tree
 
 def ler_arquivo():
@@ -332,39 +383,59 @@ def exibir_info_selecionada(tree, event):
     item = tree.selection()
     if item:
         values = tree.item(item, 'values')
+        
+        # Certifique-se de que há valores suficientes antes de acessar a matrícula
+        if len(values) >= 4:
+            entrada_nome.delete(0, tk.END)
+            entrada_nome.insert(0, values[0])
 
-        entrada_matricula.delete(0, tk.END)  
-        entrada_matricula.insert(0, values[3])  
+            entrada_idade.delete(0, tk.END)
+            entrada_idade.insert(0, values[1])
 
-        exibir()
+            entrada_matricula.delete(0, tk.END)
+            entrada_matricula.insert(0, values[3])
 
+            entrada_nota1.delete(0, tk.END)
+            entrada_nota1.insert(0, values[4])
+
+            entrada_nota2.delete(0, tk.END)
+            entrada_nota2.insert(0, values[5])
+
+            entrada_nota3.delete(0, tk.END)
+            entrada_nota3.insert(0, values[6])
+            
+            exibir()
+
+#...
 
 def exibir_info(values):
-    var_matricula_exibir = values[3].strip()
+    # Certifique-se de que há valores suficientes antes de acessar a matrícula
+    if len(values) >= 4:
+        var_matricula_exibir = values[3].strip()
 
-    if not var_matricula_exibir:
-        messagebox.showerror("Erro", "Por favor, informe a matrícula a ser exibida.")
-        return
+        if not var_matricula_exibir:
+            messagebox.showerror("Erro", "Por favor, informe a matrícula a ser exibida.")
+            return
 
-    dados = ler_arquivo()
+        dados = ler_arquivo()
 
-    for widget in frameMeioD.winfo_children():
-        widget.destroy()
+        for widget in frameMeioD.winfo_children():
+            widget.destroy()
 
+        for i, linha in enumerate(dados):
+            # Certifique-se de que há valores suficientes antes de acessar a matrícula
+            if len(linha) >= 4:
+                matricula_atual = linha[3].strip()
 
-    for i, linha in enumerate(dados):
-        matricula_atual = linha[3].strip()
+                if matricula_atual == var_matricula_exibir:
+                    for j, (rotulo, elemento) in enumerate(zip(["Nome", "Idade", "Sexo", "Matrícula", "Nota", "Nota", "Nota", "Média"], linha)):
+                        label_item = Label(frameMeioD, text=f"{rotulo}: {elemento}", font=('ivy 10 bold'), bg='gray')
+                        label_item.place(x=10, y=i * 5 + j * 20)
+                    break
 
-        if matricula_atual == var_matricula_exibir:
-            for j, (rotulo, elemento) in enumerate(zip(["Nome", "Idade", "Sexo", "Matrícula", "Nota", "Nota", "Nota", "Média"], linha)):
-                label_item = Label(frameMeioD, text=f"{rotulo}: {elemento}", font=('ivy 10 bold'), bg='gray')
-                label_item.place(x=10, y=i * 5 + j * 20)
-            break  
-
-    if not frameMeioD.winfo_children():
-        label_aviso = Label(frameMeioD, text="Matrícula não encontrada.")
-        label_aviso.place(x=10, y=10)
-
+        if not frameMeioD.winfo_children():
+            label_aviso = Label(frameMeioD, text="Matrícula não encontrada.")
+            label_aviso.place(x=10, y=10)
 
 def mostrar_tabela():
 
@@ -372,7 +443,17 @@ def mostrar_tabela():
 
     lista_itens = ler_arquivo()
 
+    
+
     tree = ttk.Treeview(frameBaixo, columns=tabela_head, show="headings")
+
+    style = ttk.Style()
+    style.theme_use("default")  # Use o estilo padrão do sistema
+
+    style.configure("Treeview", background="#3C3C3C", foreground="#C3C3C3", fieldbackground="#3C3C3C")
+    style.configure("Treeview.Heading", background="black", foreground="#C3C3C3")
+
+    style.map("Treeview", foreground=[('selected', 'white')], background=[('selected', '#5E5E5E')])
 
     vsb = ttk.Scrollbar(frameBaixo, orient="vertical", command=tree.yview)
 
@@ -385,7 +466,7 @@ def mostrar_tabela():
     frameBaixo.grid_rowconfigure(0, weight=12)
 
     hd = ["center", "center", "center", "center", "center", "center", "center", 'center']
-    h = [250, 90, 90, 90, 90, 90, 90, 90]
+    h = [250, 90, 90, 90, 105, 90, 90, 90]
     n = 0
 
     for col in tabela_head:
